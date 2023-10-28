@@ -1,7 +1,7 @@
 #ifndef _BLE_CENTRAL_H_
 #define _BLE_CENTRAL_H_
 
-#include "display.h" // Used for epaper display control
+//#include "display.h" // Used for epaper display control
 
 /*
  * Global variables for BLE connection to access.

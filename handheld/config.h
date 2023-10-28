@@ -10,6 +10,6 @@
  * But BTstack cannot access local address, DEVICE_NAME must be hard coded or use WiFi mac address instead.
  * Luckily on RPi pico w, Wifi mac address can be granted easily.
  */
-char DEVICE_NAME[12] = "CUSTOM_NAME"; // Must start with NAME_PREFIX, or it will be overwritten using WiFi mac address
+char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it will be overwritten using WiFi mac address
 
 #endif

@@ -26,10 +26,10 @@ unsigned long last_sensor_triggered = 0;
 
 
 /*
- * First the MQTT protocol needs to ping and pull update information from server periodicity.
- * So we need a timer to communicate to MQTT server.
- * Next because of system reasons, we can only do communication jobs in main thread.
- * The timer task becomes so simple that just raise a flag. then do the rest in main thread. 
+ * The MQTT protocol needs to ping the server periodicity or the server will think that client is offline.
+ * So we need a timer to ping the MQTT server and also update subscribed topics.
+ * But we can only do communication jobs in main thread not in event thread.
+ * That makes the timer task can only raise a flag, then do the rest in main thread. 
  */
 RPI_PICO_Timer timer1(1); // timer to update subscription status
 bool mqttTimerFlag = false;
@@ -69,7 +69,6 @@ void setup(){
 #endif
 
   connectMQTT(); // imply a connectWifi() as well
-
 
   timer1.attachInterruptInterval(MQTT_UPDATE_INTERVAL_US, timer1Task);
 

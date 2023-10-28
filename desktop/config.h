@@ -10,7 +10,7 @@
  * But BTstack cannot access local address, DEVICE_NAME must be hard coded or use WiFi mac address instead.
  * Luckily on RPi pico w, Wifi mac address can be granted easily.
  */
-char DEVICE_NAME[12] = "CUSTOM_NAME"; // Must start with NAME_PREFIX, or it will be overwritten using WiFi mac address
+char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it will be overwritten using WiFi mac address
 
 /*
  * WIFI access SSID and password
@@ -26,7 +26,11 @@ char DEVICE_NAME[12] = "CUSTOM_NAME"; // Must start with NAME_PREFIX, or it will
  * 3. read value from MQTT_PREFIX + HANDHELD_NAME + MQTT_TOPIC_VALUE and send to handheld device
  * 
  * A simple way to get the whole picture is subscribe MQTT_PREFIX with # wildcard
- * For example, if MQTT_PREFIX is "iot-craft/", subscribe "iot-craft/#"
+ * For example, default MQTT_PREFIX is "iot-craft/", and "/input" "/ouput" are places for sending and receiving data.
+ * Subscribe to "iot-craft/#", will give you all the incomming and outgoing data, even what you sent.
+ * "iot-craft/+/input" means all data sent to all devices, and "iot-craft/+/output" means all data from all devices.
+ * If only interested in data from specific device, use "iot-craft/DEVICE_NAME/output".
+ * And for sending command to each device, use "iot-craft/DEVICE_NAME/input".
 */
 #define MQTT_SERVER "mqtt-dashboard.com" // https://www.hivemq.com/public-mqtt-broker/
 #define MQTT_PREFIX "iot-craft/"

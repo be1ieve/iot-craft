@@ -4,7 +4,9 @@
 /*
  * This file contains images and function bounded with specific screen: waveshare 1.54 inch epaper display.
  * Image data can be created using image2lcd.exe. Note the color should be inverted and save as C array without header.
- * 
+ * To display, send: {"poker":"SUIT+NUMBER"}, for example, Diamond 3 will be: {"poker":"D03"} 
+ * Suits: C, D, H, S, and J
+ * Numbers: 1 to 13
  */
 
 #include "display.h" // required to show image
