@@ -11,9 +11,6 @@
  */
 #include "struct.h" // define structs used in this program. must include prior to other files
 #include "config.h" // almost everything need to change
-//#include "display.h" // for generic epaper display functions
-//#include "image.h" // support for display static images command
-//#include "poker.h" // support for poker card command
 #include "mqtt.h" // WiFi and MQTT functions
 #include "ble_central.h" // BLE functions
 
@@ -61,13 +58,6 @@ void setup(){
     sprintf(DEVICE_NAME, "%s%02X%02X%02X\0",NAME_PREFIX , address[3], address[4], address[5]);
   }
 
-#ifdef epd1in54_V2_H // This is the init part for 1.54inch
-  epd.LDirInit();
-  epd.Clear();
-  drawEPDWelcome();
-  epd.Sleep(); // go to sleep immediately to save power.
-#endif
-
   connectMQTT(); // imply a connectWifi() as well
 
   timer1.attachInterruptInterval(MQTT_UPDATE_INTERVAL_US, timer1Task);
@@ -78,8 +68,6 @@ void setup(){
   BTstack.setGATTServiceDiscoveredCallback(gattServiceDiscovered);
   BTstack.setGATTCharacteristicDiscoveredCallback(gattCharacteristicDiscovered);
   BTstack.setGATTCharacteristicReadCallback(gattReadCallback);
-  //BTstack.setGATTCharacteristicSubscribedCallback(gattSubscribedCallback);
-  //BTstack.setGATTCharacteristicNotificationCallback(gattCharacteristicNotification);
   BTstack.setGATTCharacteristicWrittenCallback(gattWrittenCallback);
   BTstack.setup(DEVICE_NAME);
   if(DEBUG_OUTPUT) Serial.println("Set BLE as central");
@@ -92,14 +80,30 @@ void loop() {
     connectMQTT(); // ping mqtt server and update subscription status
     if(DEBUG_OUTPUT) Serial.print(".");
   }
-  if(!ble_connected_flag && handheldMqttInput[0] != '\0'){ // BLE disconnected
-    mqttClient.unsubscribe(handheldMqttInput);
-    handheldMqttInput[0] = '\0';
-  }
+//  if(!ble_connected_flag && handheldMqttInput[0] != '\0'){ // BLE disconnected
+//    mqttClient.unsubscribe(handheldMqttInput);
+//    handheldMqttInput[0] = '\0';
+//  }
   if(mqttToHandheldFlag){ // got MQTT message to handheld
     mqttToHandheldFlag = false;
-    if(DEBUG_OUTPUT) Serial.printf("BLE send to handheld: %s\n", (char*)buffer);
-    ble_connected_device.writeCharacteristic(&ble_rx_characteristic, buffer, buffer_length);
+    char mqtt_data[buffer_length+1];
+    int mqtt_data_length = buffer_length;
+    memcpy(mqtt_data, (const char*)buffer, buffer_length);
+    mqtt_data[mqtt_data_length] = '\0';
+    connectBLE(*linked_handheld_device);
+    discoverBLEDevice();
+    if(ble_connected_flag){
+      if(DEBUG_OUTPUT){
+        Serial.printf("BLE send to handheld: %s\n", (char*)mqtt_data);
+        Serial.printf("ble_rx_characteristic: %d\n", ble_rx_characteristic);
+      }
+      ble_busy_flag = true;
+      ble_connected_device.writeCharacteristic(&ble_rx_characteristic, (uint8_t*)mqtt_data, mqtt_data_length);
+      while(ble_busy_flag) delay(100); // wait until ble_battery_service traversed
+      delay(5000); // wait for handheld to settle before disconnect
+      BTstack.bleDisconnect(&ble_connected_device); // Disconnect to force handheld device into broadcast mode.
+    }
+    else if(DEBUG_OUTPUT) Serial.println("No connection with previous handheld device.");
   }
   if(mqttToDeviceFlag){ // got MQTT message to device
     mqttToDeviceFlag = false;
@@ -109,35 +113,16 @@ void loop() {
     Serial.println(tempStr);
     DynamicJsonDocument doc(1024);
     deserializeJson(doc, tempStr);
-
-#ifdef _POKER_H_ // add poker command
-    if(doc.containsKey("poker")){
-      if(DEBUG_OUTPUT) Serial.println("draw poker image");
-      const char* poker = doc["poker"];
-      drawPoker_154in_deg0(poker);
-    }
-    epd.DisplayPartFrame();
-#endif
-#ifdef _IMAGE_H_ // add image command
-    if(doc.containsKey("image")){ // select which image to display
-      const char* imageID = doc["image"];
-      uint8_t x = 100;
-      uint8_t y = 120;
-      if(doc.containsKey("x") && doc.containsKey("y")){
-        x = atoi(doc["x"]);
-        y = atoi(doc["y"]);
-      }
-      if(DEBUG_OUTPUT) Serial.printf("Display image: %s at: %d,%d\n",imageID, x, y);
-      drawImagePartial(imageID, x, y);
-    }
-    epd.DisplayPartFrame();
-#endif
   }
 
   if(sensor_triggered_flag){ //GPIO triggered
     last_sensor_triggered = millis();
     sensor_triggered_flag = false;
     if(DEBUG_OUTPUT) Serial.printf("Sensed: %s\n", SENSOR_PINS[sensor_triggered_pin].name);
+    if(handheldMqttInput[0] != '\0'){ // unlink with previous connected device
+      mqttClient.unsubscribe(handheldMqttInput);
+      handheldMqttInput[0] = '\0';
+    }
     scanBLE();
     if(!device_count) Serial.println("No IOT device found");
     else {
@@ -147,10 +132,10 @@ void loop() {
         if(DEBUG_OUTPUT) Serial.printf("Addr: %s , RSSI: %d\n", nearby_devices[i].addr, nearby_devices[i].rssi);
         if(nearby_devices[i].rssi > nearby_devices[selected].rssi) selected = i;
       }
-      BTstack.bleDisconnect(&ble_connected_device); // disconnect old connection
       Serial.printf("Connect to: %s\n", nearby_devices[selected].addr);
-      connectBLE(nearby_devices[selected]);
-
+      connectBLE(nearby_devices[selected]); // connect to closest device
+      linked_handheld_device = &nearby_devices[selected];
+      discoverBLEDevice(); // gather informations needed
       Serial.println("Data send to cloud:");
       Serial.printf("    Desktop name:    %s\n",DEVICE_NAME);
       Serial.printf("    Triggered pin:   %s\n",SENSOR_PINS[sensor_triggered_pin].name);
@@ -177,7 +162,8 @@ void loop() {
       sprintf(handheldMqttInput, "%s%s%s", MQTT_PREFIX, handheld_name, MQTT_TOPIC_INPUT);
       if(DEBUG_OUTPUT) Serial.printf("Subscribe: %s\n", handheldMqttInput);
       mqttClient.subscribe(handheldMqttInput);
-      Serial.printf("handheld device: %s is connected.", handheld_name);
+      
+      BTstack.bleDisconnect(&ble_connected_device); // Disconnect to force handheld device into broadcast mode.
     }
   }
 

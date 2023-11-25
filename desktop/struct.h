@@ -54,6 +54,7 @@ char handheld_name[20];
 char handheld_battery_level[4];
 char handheld_value[20];
 bool ble_connected_flag = false;
+ble_adv_t *linked_handheld_device;
 
 ble_adv_t nearby_devices[20]; // Suppose 20 devices are enough
 int device_count = 0;

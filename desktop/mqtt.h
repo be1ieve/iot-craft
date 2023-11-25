@@ -61,7 +61,7 @@ void connectMQTT(){
     return;
   }
   if(DEBUG_OUTPUT) Serial.println("Connecting to MQTT");
-  mqttClient.setServer(MQTT_SERVER, 1883);
+  mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
   mqttClient.setCallback(mqttCallback);
   while (!mqttClient.connected()) {
     if(mqttClient.connect(DEVICE_NAME)){

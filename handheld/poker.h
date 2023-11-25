@@ -563,7 +563,12 @@ const unsigned char POKER_K[256] = { /* 0X00,0X01,0X20,0X00,0X40,0X00, */
  * Next two characters represent an integer from 1 to 13. Using J, Q, K for 11 to 13.
  */
 void drawPoker_154in_deg0(const char* poker){
-  switch(poker[0]){
+  char suit = poker[0];
+  int value = atoi(&poker[1]);
+  if(DEBUG_OUTPUT){
+    Serial.printf("Suit: %c, value: %d\n", suit, value);
+  }
+  switch(suit){
     case 'C': // club
     case 'c':
       epd.SetFrameMemoryPartial(POKER_CLUB, POKER_IMAGE_CENTER_X-int(POKER_CLUB_WIDTH/2),POKER_IMAGE_CENTER_Y-int(POKER_CLUB_HEIGHT/2), POKER_CLUB_WIDTH,POKER_CLUB_HEIGHT);
@@ -591,11 +596,7 @@ void drawPoker_154in_deg0(const char* poker){
       epd.SetFrameMemoryPartial(paint.GetImage(), POKER_IMAGE_CENTER_X-32, POKER_IMAGE_CENTER_Y-32, 64,64);
       break;
   }
-  int value = atoi(&poker[1]);
-  if(DEBUG_OUTPUT){
-    Serial.print("poker value: ");
-    Serial.println(value);
-  }
+
   switch(value){
     case 1:
       epd.SetFrameMemoryPartial(POKER_A, POKER_TEXT_CENTER_X-int(POKER_A_WIDTH/2),POKER_TEXT_CENTER_Y-int(POKER_A_HEIGHT/2), POKER_A_WIDTH, POKER_A_HEIGHT);

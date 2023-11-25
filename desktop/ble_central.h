@@ -18,6 +18,8 @@ BLECharacteristic  ble_rx_characteristic;
 BLECharacteristic  ble_name_characteristic;
 
 
+
+
 /*
  * This is a passive BLE scan, which only wait for peripherials sending their advertisement data.
  * The time period must be larger than 2 * device advertisement time interval in order not to miss it.
@@ -32,13 +34,6 @@ void scanBLE(){
   BTstack.bleStopScanning();
 }
 
-/*
- * This function do the following in sequence: 
- * 1. Discover all services, looking for name, battery, and uart service.
- * 2. For each service, search for the required characteristic.
- * 3. Read name and battery level from name_characteristic and battery_characteristic.
- * 4. Save the uart_rx and uart_tx characteristics for futher use.
-*/
 bool connectBLE(ble_adv_t device){
   /*
    * Althrough BTStack API provide a way to use formatted address string, but it didn't work.
@@ -50,11 +45,21 @@ bool connectBLE(ble_adv_t device){
     ble_busy_flag = true;
     BTstack.bleConnect(device.addr_type, address, 10000);
     while(ble_busy_flag) delay(100); // wait until all service discovered
+    if(ble_connected_flag) return true;
   }
-  else return false;
-  /*
-   * After connected to remote device(peripheral), collect defined characteristics.
-   */
+  return false;
+}
+
+/*
+ * Before calling this function, call connectBLE(*device) to establish connection with handheld device
+ * This function do the following in sequence:
+ * 1. Discover all services, looking for name, battery, and uart service.
+ * 2. For each service, search for the required characteristic.
+ * 3. Read name and battery level from name_characteristic and battery_characteristic.
+ * 4. Save the uart_rx and uart_tx characteristics for futher use.
+*/
+bool discoverBLEDevice(){
+  if(!ble_connected_flag) return false;
   ble_busy_flag = true;
   ble_connected_device.discoverGATTServices();
   while(ble_busy_flag) delay(100); // wait until ble_gatt_service traversed
@@ -249,7 +254,9 @@ void gattReadCallback(BLEStatus status, BLEDevice *device, uint8_t *value, uint1
  */
 void gattWrittenCallback(BLEStatus status, BLEDevice *device){
   if(DEBUG_OUTPUT) Serial.println("gattWrittenCallback");
-  ble_busy_flag = false;
+  delay(100);
+  if(status == BLE_STATUS_OK)
+    ble_busy_flag = false;
 }
 
 /*

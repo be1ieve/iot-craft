@@ -23,6 +23,7 @@ void deviceDisconnectedCallback(BLEDevice * device) {
   Serial.println("Device disconnected.");
   digitalWrite(LED_BUILTIN, LOW);
 #ifdef epd1in54_V2_H // This is the init part for 1.54inch
+  epd.WaitUntilIdle();
   epd.Sleep();
 #endif
   BTstack.startAdvertising();
@@ -57,17 +58,22 @@ uint16_t gattReadCallback(uint16_t value_handle, uint8_t * buffer, uint16_t buff
  * Strange behavior: When disconnect, called once with buffer=NULL
  */
 int gattWriteCallback(uint16_t value_handle, uint8_t *buffer, uint16_t size) {
+  if(DEBUG_OUTPUT) Serial.println("GATT Write callback");
+  if(size)
+    if(DEBUG_OUTPUT) Serial.println((const char*)buffer);  
   if(value_handle == rx_handle){
     rx_receiving_flag = true; // notify main loop into receiving loop
     if(rx_size+size < BUFFER_SIZE){
       strncpy(&rx_buffer[rx_size], (const char*)buffer, size);
       rx_size += size;
       rx_buffer[rx_size] = '\0'; // force close string
+      if(DEBUG_OUTPUT) Serial.printf("RX: %s\n", rx_buffer);
     }
     else{
       if(DEBUG_OUTPUT) Serial.println("RX buffer full"); // althrough this shouldn't happen
     }
   }
+  else if(DEBUG_OUTPUT) Serial.printf("Unknown handle destination: %d\n", value_handle);
   return size;
 }
 

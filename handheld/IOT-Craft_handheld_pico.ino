@@ -51,7 +51,12 @@ void setup() {
   BTstack.addGATTService(new UUID(UART_UUID));
   tx_handle = BTstack.addGATTCharacteristicDynamic(new UUID(UART_TX_UUID), ATT_PROPERTY_READ | ATT_PROPERTY_NOTIFY, 0);
   rx_handle = BTstack.addGATTCharacteristicDynamic(new UUID(UART_RX_UUID), ATT_PROPERTY_WRITE, 0);
-
+  if(DEBUG_OUTPUT){
+    Serial.printf("Name handle: %d\n", name_handle);
+    Serial.printf("Batt handle: %d\n", batt_handle);
+    Serial.printf("TX handle: %d\n", tx_handle);
+    Serial.printf("RX handle: %d\n", rx_handle);
+  }
   BTstack.setup(DEVICE_NAME);
   BTstack.startAdvertising();
 
@@ -78,13 +83,18 @@ void loop() {
      */
     DynamicJsonDocument doc(1024);
     deserializeJson(doc, rx_buffer);
+    if(DEBUG_OUTPUT){
+      Serial.print("JSON: ");
+      serializeJson(doc, Serial);
+      Serial.println();
+    }
 #ifdef _POKER_H_ // add poker command
     if(doc.containsKey("poker")){
       if(DEBUG_OUTPUT) Serial.println("draw poker image");
       const char* poker = doc["poker"];
       drawPoker_154in_deg0(poker);
+      epd.DisplayPartFrame();
     }
-    epd.DisplayPartFrame();
 #endif
 #ifdef _IMAGE_H_ // add image command
     if(doc.containsKey("image")){ // select which image to display
@@ -104,8 +114,8 @@ void loop() {
         Serial.println(y);
       }
       drawImagePartial(imageID, x, y);
+      epd.DisplayPartFrame();
     }
-    epd.DisplayPartFrame();
 #endif
     rx_size = 0;
     rx_receiving_flag = false; // indicate buffer can be cleared

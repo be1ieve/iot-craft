@@ -16,8 +16,8 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
  * WIFI access SSID and password
  * No luck if your WiFi needs to login using portal.
  */
-#define WIFI_SSID "SSID"
-#define WIFI_PASSWORD "PASSWORD"
+#define WIFI_SSID "MY_SSID"
+#define WIFI_PASSWORD "MY_PASSWORD"
 
 /*
  * When a handheld device touches desktop device, some steps will happen:
@@ -32,7 +32,8 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
  * If only interested in data from specific device, use "iot-craft/DEVICE_NAME/output".
  * And for sending command to each device, use "iot-craft/DEVICE_NAME/input".
 */
-#define MQTT_SERVER "mqtt-dashboard.com" // https://www.hivemq.com/public-mqtt-broker/
+#define MQTT_SERVER "broker.hivemq.com" // https://www.hivemq.com/public-mqtt-broker/
+#define MQTT_PORT 1883
 #define MQTT_PREFIX "iot-craft/"
 #define MQTT_TOPIC_OUTPUT "/output" // send data to server
 #define MQTT_TOPIC_INPUT "/input" // receive value from server
