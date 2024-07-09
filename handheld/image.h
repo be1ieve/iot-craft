@@ -4,6 +4,7 @@
 /*
  * Hardcoded one letter from A to Z, that is 26 images can be used.
  * To save image, create image data using image2lcd.exe and fill it into wanted location with its width and height together.
+ * Remember de-select image header
  * To display, send: {"image":"image ID","x":"x position","y":"y position"}, where x and y represent roughly the center point.
  */
 
