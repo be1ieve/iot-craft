@@ -48,7 +48,7 @@ void connectWifi(){
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD); // PICO W use block here, so we don't need to implement a waiting loop.
   if(WiFi.status() != WL_CONNECTED){
     Serial.println("Not connected to Wifi, restart device");
-    delay(5000);
+    delay(1000);
     rp2040.reboot();
   }
   Serial.println("WiFi ready");

@@ -1,6 +1,8 @@
 #ifndef _STRUCT_H_
 #define _STRUCT_H_
 
+#include <BTstackLib.h> // BLE address format
+
 /*
  * A type to contain which GPIO corespond to what message send to server
  */

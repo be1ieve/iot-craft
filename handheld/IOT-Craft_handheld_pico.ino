@@ -14,6 +14,7 @@
 #include "image.h" // support for display static images command
 #include "poker.h" // support for poker card command
 #include "ble.h" // BLE functions
+#include "recommendation.h"
 
 void setup() {
   Serial.begin(9600);
@@ -28,12 +29,12 @@ void setup() {
     WiFi.macAddress(address);
     sprintf(DEVICE_NAME, "%s%02X%02X%02X\0",NAME_PREFIX , address[3], address[4], address[5]); // reset DEVICE_NAME
   }
-
 #ifdef epd1in54_V2_H // This is the init part for 1.54inch
   epd.LDirInit();
   epd.Clear();
-  drawEPDWelcome(); // Display welcome page prior to BLE initialize
-  epd.Sleep(); // go to sleep immediately to save power.
+  drawEPDBackground();
+  epd.SetFrameMemoryPartial(STANDBY_2Q,100,44, STANDBY_2Q_WIDTH,STANDBY_2Q_HEIGHT);
+  epd.DisplayPartFrame();
 #endif
 
   // set BLE callbacks
@@ -56,9 +57,17 @@ void setup() {
     Serial.printf("Batt handle: %d\n", batt_handle);
     Serial.printf("TX handle: %d\n", tx_handle);
     Serial.printf("RX handle: %d\n", rx_handle);
+    Serial.printf("Header: %d\n", HEADER_TEXT.length());
+    Serial.printf("Pos: %d\n", int((12-HEADER_TEXT.length())/2));
   }
   BTstack.setup(DEVICE_NAME);
   BTstack.startAdvertising();
+
+#ifdef epd1in54_V2_H // This is the init part for 1.54inch
+  epd.SetFrameMemoryPartial(STANDBY_4Q,44,44, STANDBY_4Q_WIDTH,STANDBY_4Q_HEIGHT);
+  epd.DisplayPartFrame();
+  epd.Sleep(); // go to sleep immediately to save power.
+#endif
 
 }
 
@@ -93,7 +102,6 @@ void loop() {
       if(DEBUG_OUTPUT) Serial.println("draw poker image");
       const char* poker = doc["poker"];
       drawPoker_154in_deg0(poker);
-      epd.DisplayPartFrame();
     }
 #endif
 #ifdef _IMAGE_H_ // add image command
@@ -114,7 +122,13 @@ void loop() {
         Serial.println(y);
       }
       drawImagePartial(imageID, x, y);
-      epd.DisplayPartFrame();
+    }
+#endif
+#ifdef _RECOMMENDATION_H_
+    if(doc.containsKey("recommendation")){
+      const char* recom = doc["recommendation"];
+      Serial.printf("Recommendation: %s\n", recom);
+      drawRecommendation(recom);
     }
 #endif
     rx_size = 0;
