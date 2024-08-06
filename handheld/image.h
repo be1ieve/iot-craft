@@ -4,6 +4,11 @@
 /*
  * Hardcoded one letter from A to Z, that is 26 images can be used.
  * To save image, create image data using image2lcd.exe and fill it into wanted location with its width and height together.
+ * Remember to: 
+ * 1. register using 0000-0000-0000-0000-6A3B
+ * 2. de-select image header from left pannel
+ * 3. reverse color from bottom pannel
+ *
  * To display, send: {"image":"image ID","x":"x position","y":"y position"}, where x and y represent roughly the center point.
  */
 
