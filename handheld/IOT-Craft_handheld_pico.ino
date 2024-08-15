@@ -11,6 +11,7 @@
 #include "struct.h" // define structs used in this program. must include prior to other files
 #include "config.h" // almost everything need to change
 #include "display.h" // for generic epaper display functions
+#include "status.h" // handheld status image
 #include "image.h" // support for display static images command
 #include "poker.h" // support for poker card command
 #include "ble.h" // BLE functions
@@ -97,16 +98,17 @@ void loop() {
       serializeJson(doc, Serial);
       Serial.println();
     }
+
 #ifdef _POKER_H_ // add poker command
-    if(doc.containsKey("poker")){
+    if(doc.containsKey("command") && doc["command"] == "poker"){
       if(DEBUG_OUTPUT) Serial.println("draw poker image");
-      const char* poker = doc["poker"];
+      const char* poker = doc["value"];
       drawPoker_154in_deg0(poker);
     }
 #endif
 #ifdef _IMAGE_H_ // add image command
-    if(doc.containsKey("image")){ // select which image to display
-      const char* imageID = doc["image"];
+    if(doc.containsKey("command") && doc["command"] == "image"){ // select which image to display
+      const char* imageID = doc["value"];
       uint8_t x = 100;
       uint8_t y = 120;
       if(doc.containsKey("x") && doc.containsKey("y")){
@@ -125,12 +127,21 @@ void loop() {
     }
 #endif
 #ifdef _RECOMMENDATION_H_
-    if(doc.containsKey("recommendation")){
-      const char* recom = doc["recommendation"];
+    if(doc.containsKey("command") && doc["command"]=="recommendation"){
+      const char* recom = doc["value"];
       Serial.printf("Recommendation: %s\n", recom);
       drawRecommendation(recom);
     }
 #endif
+#ifdef _STATUS_H_
+    if(doc.containsKey("command") && doc["command"]=="status"){
+      const char* disp = doc["display"];
+      const char* reason = doc["reason"];
+      Serial.printf("Status: %s, %s\n", disp, reason);
+      drawStatus(disp, reason);
+    }
+#endif
+
     rx_size = 0;
     rx_receiving_flag = false; // indicate buffer can be cleared
   }

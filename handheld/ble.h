@@ -13,7 +13,7 @@ void deviceConnectedCallback(BLEStatus status, BLEDevice *device) {
       digitalWrite(LED_BUILTIN, HIGH);
 #ifdef epd1in54_V2_H // This is the init part for 1.54inch
       epd.LDirInit();
-      drawEPDBackground(); // in order to clear old image, a full background redraw is required.
+//      drawEPDBackground(); // in order to clear old image, a full background redraw is required.
 #endif
       break;
   }

@@ -1112,6 +1112,7 @@ const unsigned char IMAGE_Z[0] = {};
  * Note that the color is reversed!
  */
 void drawImagePartial(const char* imageID, const uint8_t x, const uint8_t y){
+  drawEPDBackground(); // clear screen
   switch(imageID[0]){ // only cares about the first character
     case 'A':
     case 'a':

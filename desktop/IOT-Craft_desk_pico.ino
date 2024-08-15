@@ -1,6 +1,7 @@
 
 #define DEBUG_OUTPUT 1 // Debug output
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <BTstackLib.h>
 #include <ArduinoJson.h>
@@ -20,10 +21,10 @@
 
 // For pin interrupt
 const int pin_count=ARRAY_SIZE(SENSOR_PINS);
-bool sensor_triggered_flag = false;
-int sensor_triggered_pin = 0;
+volatile bool sensor_triggered_flag = false;
+volatile int sensor_triggered_pin = 0;
 const int sensor_trigger_interval = 3000; // time in ms
-unsigned long last_sensor_triggered = 0;
+volatile unsigned long last_sensor_triggered = 0; // time in ms
 
 
 /*
@@ -33,7 +34,7 @@ unsigned long last_sensor_triggered = 0;
  * That makes the timer task can only raise a flag, then do the rest in main thread. 
  */
 RPI_PICO_Timer timer1(1); // timer to update subscription status
-bool mqttTimerFlag = false;
+volatile bool mqttTimerFlag = false;
 bool timer1Task(struct repeating_timer *t){
   mqttTimerFlag = true;
   return true;
@@ -70,7 +71,7 @@ void setup(){
   epd.DisplayPartFrame();
 #endif
 
- timer1.attachInterruptInterval(MQTT_UPDATE_INTERVAL_US, timer1Task);
+  timer1.attachInterruptInterval(MQTT_UPDATE_INTERVAL_US, timer1Task);
 
   BTstack.setBLEAdvertisementCallback(advertisementCallback);
   BTstack.setBLEDeviceConnectedCallback(deviceConnectedCallback);
@@ -102,9 +103,12 @@ void setup(){
   epd.Sleep(); // go to sleep immediately to save power.
 #endif
 
+  rp2040.wdt_begin(8300); // enable watchdog to max 8.3 seconds
 }
 
 void loop() {
+  rp2040.wdt_reset(); // feed the dog first!!
+
   if(mqttTimerFlag){ // time to update data from MQTT server
     mqttTimerFlag = false;
     connectMQTT(); // ping mqtt server and update subscription status
@@ -130,8 +134,8 @@ void loop() {
       serializeJson(doc, Serial);
       Serial.println();
     }
-    if(doc.containsKey("occupy")){ // indicate that handheld device reconnected to one device
-      const char* deviceID = doc["occupy"];
+    if(doc.containsKey("command") && doc["command"]=="occupy"){ // indicate that handheld device reconnected to one device
+      const char* deviceID = doc["value"];
       if(strcmp(deviceID, DEVICE_NAME) != 0){
         Serial.println("Handheld device moved.");
         mqttClient.unsubscribe(handheldMqttInput);
@@ -139,9 +143,10 @@ void loop() {
       }
     }
     else{ // send message to handheld
+      if(handheldMqttInput[0] == '\0') return;
       connectBLE(*linked_handheld_device);
       discoverBLEDevice();
-     if(ble_connected_flag){
+      if(ble_connected_flag){
         if(DEBUG_OUTPUT){
           Serial.printf("BLE send to handheld: %s\n", (char*)mqtt_data);
           Serial.printf("ble_rx_characteristic: %d\n", ble_rx_characteristic);
@@ -149,7 +154,9 @@ void loop() {
         ble_busy_flag = true;
         ble_connected_device.writeCharacteristic(&ble_rx_characteristic, (uint8_t*)mqtt_data, mqtt_data_length);
         while(ble_busy_flag) delay(100); // wait until ble_battery_service traversed
+        rp2040.wdt_reset(); // feed the dog
         delay(5000); // wait for handheld to settle before disconnect
+        rp2040.wdt_reset(); // feed the dog
         BTstack.bleDisconnect(&ble_connected_device); // Disconnect to force handheld device into broadcast mode.
      }
       else if(DEBUG_OUTPUT) Serial.println("No connection with previous handheld device.");
@@ -173,15 +180,15 @@ void loop() {
     drawEPDBackground(); // re-enable E-Paper
 #endif
 #ifdef _POKER_H_ // add poker command
-    if(doc.containsKey("poker")){
+    if(doc.containsKey("command") && doc["command"]=="poker"){
       if(DEBUG_OUTPUT) Serial.println("draw poker image");
-      const char* poker = doc["poker"];
+      const char* poker = doc["value"];
       drawPoker_154in_deg0(poker);
     }
 #endif
 #ifdef _IMAGE_H_ // add image command
-    if(doc.containsKey("image")){ // select which image to display
-      const char* imageID = doc["image"];
+    if(doc.containsKey("command") && doc["command"]=="image"){ // select which image to display
+      const char* imageID = doc["value"];
       uint8_t x = 100;
       uint8_t y = 120;
       if(doc.containsKey("x") && doc.containsKey("y")){
@@ -200,8 +207,8 @@ void loop() {
     }
 #endif
 #ifdef _RECOMMENDATION_H_
-    if(doc.containsKey("recommendation")){
-      const char* recom = doc["recommendation"];
+    if(doc.containsKey("command") && doc["command"]=="recommendation"){
+      const char* recom = doc["value"];
       Serial.printf("Recommendation: %s\n", recom);
       drawRecommendation(recom);
     }
@@ -234,16 +241,20 @@ void loop() {
       Serial.printf("    Desktop name:    %s\n",DEVICE_NAME);
       Serial.printf("    Triggered pin:   %s\n",SENSOR_PINS[sensor_triggered_pin].name);
       Serial.printf("    Handheld name:   %s\n",handheld_name);
+/*
       Serial.printf("    battery level:   %s\n",handheld_battery_level);
       Serial.printf("    sensor value:    %s\n",handheld_value);
-
+*/
       StaticJsonDocument<256> doc; // use stack memory
       String jsonString, jsonString2;
+      doc["command"] = "connect_ble";
       doc["name"] = DEVICE_NAME;
       doc["pin"] = SENSOR_PINS[sensor_triggered_pin].name;
       doc["handheld"] = handheld_name;
+/*
       doc["battery"] = handheld_battery_level;
       doc["value"] = handheld_value;
+*/
       serializeJson(doc,jsonString); // save as a string, ready to send out
       if(DEBUG_OUTPUT) Serial.println(jsonString);
       if(DEBUG_OUTPUT) Serial.println(jsonString.length());
@@ -254,7 +265,8 @@ void loop() {
         Serial.println("publish connect message to MQTT broker");
 
       StaticJsonDocument<256> doc2; // use stack memory
-      doc2["occupy"] = DEVICE_NAME;
+      doc2["command"] = "occupy";
+      doc2["value"] = DEVICE_NAME;
       serializeJson(doc2,jsonString2); // save as a string, ready to send out
       if(DEBUG_OUTPUT) Serial.println(jsonString2);
       if(DEBUG_OUTPUT) Serial.println(jsonString2.length());

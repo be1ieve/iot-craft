@@ -30,8 +30,10 @@ void scanBLE(){
   device_count = 0;
   Serial.println("Scanning nearby BLE device...");
   BTstack.bleStartScanning();
-  delay(2000); // only scan for a short period
+  delay(1000); // only scan for a short period
   BTstack.bleStopScanning();
+  rp2040.wdt_reset(); // feed the dog!!
+
 }
 
 bool connectBLE(ble_adv_t device){
@@ -43,7 +45,9 @@ bool connectBLE(ble_adv_t device){
   int parsed = sscanf(device.addr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", address, address + 1,address + 2, address + 3, address + 4, address + 5);
   if(parsed == 6){
     ble_busy_flag = true;
-    BTstack.bleConnect(device.addr_type, address, 10000);
+    rp2040.wdt_reset(); // feed the dog!!
+    BTstack.bleConnect(device.addr_type, address, 8000);
+    rp2040.wdt_reset(); // feed the dog!!
     while(ble_busy_flag) delay(100); // wait until all service discovered
     if(ble_connected_flag) return true;
   }
@@ -66,9 +70,11 @@ bool discoverBLEDevice(){
   ble_busy_flag = true;
   ble_connected_device.discoverCharacteristicsForService(&ble_name_service);
   while(ble_busy_flag) delay(100); // wait until ble_name_service traversed
+/*
   ble_busy_flag = true;
   ble_connected_device.discoverCharacteristicsForService(&ble_battery_service);
   while(ble_busy_flag) delay(100); // wait until ble_battery_service traversed
+*/
   ble_busy_flag = true;
   ble_connected_device.discoverCharacteristicsForService(&ble_uart_service);
   while(ble_busy_flag) delay(100); // wait until ble_uart_service traversed
@@ -79,7 +85,7 @@ bool discoverBLEDevice(){
   while(ble_busy_flag) delay(100);
   memcpy(handheld_name, (const char*)buffer, buffer_length);
   buffer_length = 0; // mark as used
-  
+/*
   if(DEBUG_OUTPUT) Serial.println("Reading handheld battery level");
   ble_busy_flag=true;
   ble_connected_device.readCharacteristic(&ble_battery_characteristic);    
@@ -93,7 +99,7 @@ bool discoverBLEDevice(){
   while(ble_busy_flag) delay(100);
   memcpy(handheld_value, (const char*)buffer, buffer_length);
   buffer_length = 0; // mark as used
-
+*/
   return true;
 }
 
@@ -257,6 +263,7 @@ void gattWrittenCallback(BLEStatus status, BLEDevice *device){
   delay(100);
   if(status == BLE_STATUS_OK)
     ble_busy_flag = false;
+  else if(DEBUG_OUTPUT) Serial.println("OOPS!");
 }
 
 /*

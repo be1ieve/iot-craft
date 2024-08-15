@@ -6,7 +6,7 @@ const uint8_t FONT52_WIDTH = 32;
 const uint8_t FONT52_HEIGHT = 64;
 
 // Where to put poker image and text
-const uint8_t RECOM_ALPHABET_CENTER_X = 50;
+const uint8_t RECOM_ALPHABET_CENTER_X = 60;
 const uint8_t RECOM_ALPHABET_CENTER_Y = 100;
 const uint8_t RECOM_VALUE_CENTER_X = 150;
 const uint8_t RECOM_VALUE_CENTER_Y = 100;

@@ -26,7 +26,6 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
 #define WIFI_SSID "YJcoffee"
 #define WIFI_PASSWORD "0229010888"
 
-
 /*
  * When a handheld device touches desktop device, some steps will happen:
  * 1. send combined data to MQTT_PREFIX + DEVICE_NAME + MQTT_TOPIC_NOTIFY
@@ -47,7 +46,7 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
 #define MQTT_TOPIC_OUTPUT "/output" // send data to server
 #define MQTT_TOPIC_INPUT "/input" // receive value from server
 
-#define MQTT_UPDATE_INTERVAL_US 5000000 // check for updates every 5 seconds
+#define MQTT_UPDATE_INTERVAL_US 1000000 // check for updates every 1 seconds
 
 /*
  * Define pins used in contact sensor.

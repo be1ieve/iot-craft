@@ -666,20 +666,13 @@ const unsigned char FONT52[36][256] = {
 };
 
 #ifdef epd1in54_V2_H
-/*
- * Show builtin poker image and card value on display.
- * This function displays on waveshare 1.54 inch epaper display with 0 rotate angle
- * 
- * First character represent poker suit, alphabet C, D, H, S, and J.
- * Next two characters represent an integer from 1 to 13. Using J, Q, K for 11 to 13.
- */
-
 void drawRecommendation(const char* recom){
   char alphabet = recom[0];
   int value = atoi(&recom[1]);
   if(DEBUG_OUTPUT){
     Serial.printf("Alphabet: %c = %d, value: %d\n", alphabet, alphabet, value);
   }
+  drawEPDBackground(); // clear screen
   if(alphabet >= 65 && alphabet <= 90){
     epd.SetFrameMemoryPartial(FONT52[alphabet-55], RECOM_ALPHABET_CENTER_X-FONT52_WIDTH/2,RECOM_ALPHABET_CENTER_Y-FONT52_HEIGHT/2, FONT52_WIDTH, FONT52_HEIGHT);
   }
