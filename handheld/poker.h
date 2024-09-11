@@ -568,7 +568,6 @@ void drawPoker_154in_deg0(const char* poker){
   if(DEBUG_OUTPUT){
     Serial.printf("Suit: %c, value: %d\n", suit, value);
   }
-  drawEPDBackground(); // clear screen
   switch(suit){
     case 'C': // club
     case 'c':

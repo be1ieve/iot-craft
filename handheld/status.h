@@ -287,7 +287,6 @@ void drawStatus(const char* disp, const char* reason){
   if(DEBUG_OUTPUT){
     Serial.printf("Status: %d\n", stat);
   }
-  drawEPDBackground(); // clear screen
   switch(stat){
     case 1: // reuse STANDBY_4Q in display.h
       epd.SetFrameMemoryPartial(STANDBY_4Q, STATUS_CENTER_X-STANDBY_4Q_WIDTH/2, STATUS_CENTER_Y-STANDBY_4Q_HEIGHT/2, STANDBY_4Q_WIDTH, STANDBY_4Q_HEIGHT);

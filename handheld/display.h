@@ -356,6 +356,7 @@ void drawEPDBackground(){
   paint.DrawStringAt(textOffset,183, DEVICE_NAME, &Font16, COLORED);
   epd.DisplayPartBaseImage(image);
 }
+
 #endif // epd1in54_V2_H
 
 #endif // _DISPLAY_H_

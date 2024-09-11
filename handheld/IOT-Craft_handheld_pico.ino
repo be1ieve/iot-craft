@@ -81,7 +81,7 @@ void loop() {
    * To overcome this we might need to implement another layer of potocol...
   */
   if(rx_receiving_flag){
-    //drawEPDBackground(); // re-enable EPaper
+    drawEPDBackground(); // re-enable EPaper
     int rx_temp = rx_size;
     delay(100);
     while(rx_temp != rx_size){ // checks if data size changed.
