@@ -18,12 +18,13 @@
 #include "image.h" // support for display static images command
 #include "poker.h" // support for poker card command
 #include "recommendation.h" // support recommendation map
+#include "status.h" // handheld status image
 
 // For pin interrupt
 const int pin_count=ARRAY_SIZE(SENSOR_PINS);
 volatile bool sensor_triggered_flag = false;
 volatile int sensor_triggered_pin = 0;
-const int sensor_trigger_interval = 3000; // time in ms
+const int sensor_trigger_interval = 5000; // time in ms
 volatile unsigned long last_sensor_triggered = 0; // time in ms
 
 
@@ -60,7 +61,7 @@ void setup(){
   if(!nameString.startsWith(NAME_PREFIX)){
     byte address[6];
     WiFi.macAddress(address);
-    sprintf(DEVICE_NAME, "%s%02X%02X%02X\0",NAME_PREFIX , address[3], address[4], address[5]);
+    if(DEBUG_OUTPUT) sprintf(DEVICE_NAME, "%s%02X%02X%02X\0",NAME_PREFIX , address[3], address[4], address[5]);
   }
 
 #ifdef epd1in54_V2_H // This is the init part for 1.54inch
@@ -118,6 +119,7 @@ void loop() {
 //    mqttClient.unsubscribe(handheldMqttInput);
 //    handheldMqttInput[0] = '\0';
 //  }
+
   if(mqttToHandheldFlag){ // got MQTT message to handheld
     mqttToHandheldFlag = false;
     char mqtt_data[buffer_length+1];
@@ -177,7 +179,8 @@ void loop() {
 #ifdef _DISPLAY_H_
     epd.LDirInit();
     epd.Clear();
-    drawEPDBackground(); // re-enable E-Paper
+    rp2040.wdt_reset(); // feed the dog
+    //drawEPDBackground(); // re-enable E-Paper
 #endif
 #ifdef _POKER_H_ // add poker command
     if(doc.containsKey("command") && doc["command"]=="poker"){
@@ -213,12 +216,19 @@ void loop() {
       drawRecommendation(recom);
     }
 #endif
+#ifdef _STATUS_H_
+    if(doc.containsKey("command") && doc["command"]=="status"){
+      const char* disp = doc["display"];
+      const char* reason = doc["reason"];
+      Serial.printf("Status: %s, %s\n", disp, reason);
+      drawStatus(disp, reason);
+    }
+#endif
 
   }
 
   if(sensor_triggered_flag){ //GPIO triggered
     last_sensor_triggered = millis();
-    sensor_triggered_flag = false;
     if(DEBUG_OUTPUT) Serial.printf("Sensed: %s\n", SENSOR_PINS[sensor_triggered_pin].name);
     if(handheldMqttInput[0] != '\0'){ // unlink with previous connected device
       mqttClient.unsubscribe(handheldMqttInput);
@@ -255,14 +265,9 @@ void loop() {
       doc["battery"] = handheld_battery_level;
       doc["value"] = handheld_value;
 */
-      serializeJson(doc,jsonString); // save as a string, ready to send out
-      if(DEBUG_OUTPUT) Serial.println(jsonString);
-      if(DEBUG_OUTPUT) Serial.println(jsonString.length());
+
       connectMQTT(); //ensure everything is OK
       char topicString[40];
-      sprintf(topicString, "%s%s%s", MQTT_PREFIX, DEVICE_NAME, MQTT_TOPIC_OUTPUT); // send to server
-      if(mqttClient.publish(topicString, jsonString.c_str()))
-        Serial.println("publish connect message to MQTT broker");
 
       StaticJsonDocument<256> doc2; // use stack memory
       doc2["command"] = "occupy";
@@ -274,12 +279,21 @@ void loop() {
       if(mqttClient.publish(topicString, jsonString2.c_str()))
         Serial.println("publish occupy message to MQTT broker");
 
+      serializeJson(doc,jsonString); // save as a string, ready to send out
+      if(DEBUG_OUTPUT) Serial.println(jsonString);
+      if(DEBUG_OUTPUT) Serial.println(jsonString.length());
+      sprintf(topicString, "%s%s%s", MQTT_PREFIX, DEVICE_NAME, MQTT_TOPIC_OUTPUT); // send to server
+      if(mqttClient.publish(topicString, jsonString.c_str()))
+        Serial.println("publish connect message to MQTT broker");
+
       sprintf(handheldMqttInput, "%s%s%s", MQTT_PREFIX, handheld_name, MQTT_TOPIC_INPUT);
       if(DEBUG_OUTPUT) Serial.printf("Subscribe: %s\n", handheldMqttInput);
       mqttClient.subscribe(handheldMqttInput);
 
       BTstack.bleDisconnect(&ble_connected_device); // Disconnect to force handheld device into broadcast mode.
     }
+
+    sensor_triggered_flag = false;
   }
 
   delay(100);
@@ -289,9 +303,11 @@ void loop() {
  * There's no way to know which pin triggered, need to traverse the list
  */
 void onSensorInterrupt(){
-  if(sensor_triggered_flag | millis()-last_sensor_triggered < sensor_trigger_interval) return;
+  //if(sensor_triggered_flag | millis()-last_sensor_triggered < sensor_trigger_interval) return;
+  if(sensor_triggered_flag) return;
   for(int i=0;i<pin_count;i++){
     if(!digitalRead(SENSOR_PINS[i].pin)){
+      if(sensor_triggered_pin == i && millis()-last_sensor_triggered < sensor_trigger_interval) return;
       sensor_triggered_flag = true;
       sensor_triggered_pin = i;
     }

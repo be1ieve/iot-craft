@@ -23,8 +23,10 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
  * WIFI access SSID and password
  * No luck if your WiFi needs to login using portal.
  */
-#define WIFI_SSID "YJcoffee"
-#define WIFI_PASSWORD "0229010888"
+
+#define WIFI_SSID "lemongrass"
+#define WIFI_PASSWORD "0229035188"
+
 
 /*
  * When a handheld device touches desktop device, some steps will happen:
@@ -40,7 +42,6 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
  * And for sending command to each device, use "iot-craft/DEVICE_NAME/input".
 */
 #define MQTT_SERVER "broker.hivemq.com" // https://www.hivemq.com/public-mqtt-broker/
-//#define MQTT_SERVER "34.41.50.232"
 #define MQTT_PORT 1883
 #define MQTT_PREFIX "iot-craft/"
 #define MQTT_TOPIC_OUTPUT "/output" // send data to server
@@ -52,6 +53,6 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
  * Define pins used in contact sensor.
  * The first element is the GPIO id, the second element is the name to send out.
  */
-sensor_pin_t SENSOR_PINS[]={{16,"Left"},{18,"Middle"},{20,"Right"}};
+sensor_pin_t SENSOR_PINS[]={{16,"SENSOR_1"},{18,"SENSOR_2"},{20,"SENSOR_3"}};
 
 #endif
