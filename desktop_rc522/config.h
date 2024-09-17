@@ -65,6 +65,10 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
  */
 sensor_t RFID_SENSORS[]={{"RFID_1",16,17},{"RFID_2",18,19},{"RFID_3",20,22}}; // BUG? GPIO 21 cannot be SS pin
 
+/*
+ * A notification LED on GPIO 12
+ */
+#define STATUS_LED 12
 
 /*
  * Provided MFRC522 library uses SPI1. Define SPI1 pins here

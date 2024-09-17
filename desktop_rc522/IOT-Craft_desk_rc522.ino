@@ -51,6 +51,7 @@ MFRC522 mfrc522[RFID_COUNTS];   // Create MFRC522 instance.
 void setup() {
   Serial.begin(9600); // Initialize serial communications with the PC
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(STATUS_LED, OUTPUT);
 
   /*
    * Make sure DEVICE_NAME starts with NAME_PREFIX, otherwise replace it with WiFi mac address.
@@ -192,6 +193,8 @@ void loop() {
     // Look for new cards
 
     if (mfrc522[reader].PICC_IsNewCardPresent() && mfrc522[reader].PICC_ReadCardSerial()) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      digitalWrite(STATUS_LED, HIGH);
       String tag_name = RFID_SENSORS[reader].name;
       byte tag_uid[7] = {}; // rfid uid length is 4 or 7 bytes
       char tag_uid_hex[15] = {};
@@ -232,7 +235,9 @@ void loop() {
         Serial.println("publish message to MQTT broker");
 
 #endif
-
+     digitalWrite(LED_BUILTIN, LOW);
+     digitalWrite(STATUS_LED, LOW);
+ 
     } //if (mfrc522[reader].PICC_IsNewC
   } //for(uint8_t reader
 }

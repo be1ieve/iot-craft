@@ -138,6 +138,7 @@ void deviceConnectedCallback(BLEStatus status, BLEDevice *device) {
   switch (status) {
     case BLE_STATUS_OK:
       digitalWrite(LED_BUILTIN, HIGH);
+      digitalWrite(STATUS_LED, HIGH);
       ble_connected_flag = true;
       ble_connected_device = *device;
       if(DEBUG_OUTPUT) Serial.println("BLE device connected!");
@@ -160,6 +161,7 @@ void deviceConnectedCallback(BLEStatus status, BLEDevice *device) {
 void deviceDisconnectedCallback(BLEDevice * device) {
   if(DEBUG_OUTPUT) Serial.println("BLE device disconnected.");
   digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(STATUS_LED, LOW);
 #ifdef epd1in54_V2_H // This is the init part for 1.54inch
   epd.Sleep();
 #endif

@@ -27,7 +27,6 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
 #define WIFI_SSID "lemongrass"
 #define WIFI_PASSWORD "0229035188"
 
-
 /*
  * When a handheld device touches desktop device, some steps will happen:
  * 1. send combined data to MQTT_PREFIX + DEVICE_NAME + MQTT_TOPIC_NOTIFY
@@ -54,5 +53,11 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
  * The first element is the GPIO id, the second element is the name to send out.
  */
 sensor_pin_t SENSOR_PINS[]={{16,"SENSOR_1"},{18,"SENSOR_2"},{20,"SENSOR_3"}};
+
+/*
+ * A notification LED on GPIO 12
+ */
+#define STATUS_LED 12
+
 
 #endif
