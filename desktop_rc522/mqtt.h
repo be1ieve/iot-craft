@@ -40,11 +40,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length){
 
 void connectWifi(){
   if(WiFi.status() == WL_CONNECTED) return;
-  if(DEBUG_OUTPUT) Serial.println("Wifi connecting");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD); // PICO W use block here, so we don't need to implement a waiting loop.
+  if(DEBUG_OUTPUT) Serial.printf("Wifi: %s connecting\n", WIFI_SSID);
+  if(WIFI_PASSWORD == ""){
+    if(DEBUG_OUTPUT) Serial.println("Insecure WiFi");
+    WiFi.begin(WIFI_SSID);
+  }
+  else WiFi.begin(WIFI_SSID, WIFI_PASSWORD); // PICO W use block here, so we don't need to implement a waiting loop.
   if(WiFi.status() != WL_CONNECTED){
     Serial.println("Not connected to Wifi, restart device");
-    delay(1000);
+    delay(3000);
     rp2040.reboot();
   }
   Serial.println("WiFi ready");
