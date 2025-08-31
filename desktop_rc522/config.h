@@ -23,8 +23,11 @@ char DEVICE_NAME[20] = "CUSTOM_NAME_HERE"; // Must start with NAME_PREFIX, or it
  * WIFI access SSID and password
  * No luck if your WiFi needs to login using portal.
  */
-#define WIFI_SSID "lemongrass"
-#define WIFI_PASSWORD "0229035188"
+//#define WIFI_SSID "lemongrass"
+//#define WIFI_PASSWORD "0229035188"
+#define WIFI_SSID "MR.BROWN-2F"
+#define WIFI_PASSWORD ""
+
 
 /*
  * When a handheld device touches desktop device, some steps will happen:
